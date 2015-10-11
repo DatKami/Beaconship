@@ -9,6 +9,9 @@ Welcome! You're viewing the beaconship source code! Few things of note:
   As such, this code is only meant to exist on beaconship.me or any of it's sister sites.
   (C) 2014 Brandon Ha (alias Kami)
 */
+
+//working tables
+
 var connect = true; //debug variable for testing offline
 var chars = [];
 var charf = [];
@@ -20,9 +23,11 @@ var eloGraph = [];
 var resToggle = false;
 var inProgress = false;
 
+//static variables 
+
 var SPEED = 350;
-var RES_BOX_HEIGHT = .65;
-var FIELD_HEIGHT = .73;
+var RES_BOX_HEIGHT = .65;   //the height in decimal of the results box
+var FIELD_HEIGHT = .73;     //the height in decimal of the playfield
 var MAX_LENGTH_RATIO = 9;
 var K_FACTOR = 1;
 var CHART_WIDTH = .75;
@@ -86,7 +91,7 @@ function localData() {
                1600, 1500,
                2000, 1400, 1400, 1400,
                1400, 1400,
-			   1600
+               1600
               ];
 }
     
@@ -107,27 +112,26 @@ jQuery(document).ready(function(){
   var bleed1 = ele('bleed1');     var bleed2 = ele('bleed2');
   var p1hvr = ele('p1hvr');       var p2hvr = ele('p2hvr');
   var bb1 = ele('bb1');           var bb2 = ele('bb2');
+  var res1 = ele('res-box1');     var res2 = ele('res-box2');
+  var disc1 = ele("disclaimer");  var disc2 = ele("disclaimer2");
   var undo = ele('undo');
   var intrep = ele('percent');
   var results = ele('results-field');
   var nojava = ele('nojava-field');
   var resultsLabel = ele('results-label');
-  var res1 = ele("res-box1"); var res2 = ele("res-box2");
-  var tip = ele("tooltip");
-  var disc1 = ele("disclaimer"); var disc2 = ele("disclaimer2");
+  var tip = ele('tooltip');
   var startButton = ele("start");
   
-  nojava.style.top = "-100%"; //this doesn't run if javascript isn't there; show the nojava page
+  //this doesn't run if javascript isn't there; removes the nojava page
+  nojava.style.top = "-100%"; 
   
-  var finishedList; //contains ids of winners in order
-  var charsdata; //contains contender objects
-  var tokenStack; //contains undoToken objects
-  var click1Lock; var click2Lock; var hover1Lock; var hover2Lock;
-  //contender
-  var char1; 
-  var char2; 
-  //end token
-  var killswitch;
+  var finishedList;                 //contains ids of winners in order
+  var charsdata;                    //contains contender objects
+  var tokenStack;                   //contains undoToken objects
+  var click1Lock; var click2Lock;   //exclusive locks to prevent animations
+  var hover1Lock; var hover2Lock;
+  var char1;      var char2;        //contenders
+  var killswitch;                   //end variable
   
   reset();//initialization
   
@@ -618,14 +622,24 @@ jQuery(document).ready(function(){
     $(divString).css(v, dur); $(divString).css('-o-' + v, dur);
     $(divString).css('-moz-' + v, dur); $(divString).css('-webkit-' + v, dur);
   }
+  /***
+  formatResults:  formats the results to a div to make them uniform
+  arguments:
+    start:      the start of the results list to derive members from
+    end:        the end   of the results list to derive members from
+    divString:  the name of the div to format results to
+    size:       initial size of the font, in vw
+    absHeight:  
+  */
   function formatResults(start, end, divString, size, absHeight) {
     var divTo = document.getElementById(divString);
     while ( divTo.firstChild ) divTo.removeChild( divTo.firstChild ); //purge contents
     for (i = start; i <= end; i++) {
       var tempDiv = document.createElement('div'); tempDiv.id = 'no'+i;
       tempDiv.className = "to5 anim";
-      styler(start, end, tempDiv, size+'vw', absHeight); divTo.appendChild(tempDiv);
-      tempDiv = document.createElement('div'); tempDiv.id = "to5Label";
+      styler(start, end, tempDiv, size+'vw',   absHeight); divTo.appendChild(tempDiv);
+      //make a new div to append
+      tempDiv = document.createElement('div'); tempDiv.id = "to5Label"; 
       tempDiv.className = "anim"; tempDiv.textContent = i+'';
       styler(start, end, tempDiv, size + 'vw', absHeight); divTo.appendChild(tempDiv);
     }
