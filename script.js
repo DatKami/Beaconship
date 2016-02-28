@@ -3,11 +3,11 @@ Welcome! You're viewing the beaconship source code! Few things of note:
 
 - This code may not be commented sufficiently or may look disorganized.
 
-- This code belongs to the programmer, reached at kami@beaconship.me.
+- This code belongs to the programmer, reached at beaconshipme@gmail.com.
   You are free to look at the code, but you may not steal a significant part of it for
   implementation in your website.
   As such, this code is only meant to exist on beaconship.me or any of it's sister sites.
-  (C) 2014 Brandon Ha (alias Kami)
+  (C) 2014-2016 Brandon Ha (alias Kami)
 */
 
 //working tables
@@ -25,7 +25,7 @@ var inProgress = false;
 
 //static variables 
 
-var SPEED = 350;
+var SPEED = 350;			//the speed of animation for pertaining animations
 var RES_BOX_HEIGHT = .65;   //the height in decimal of the results box
 var FIELD_HEIGHT = .73;     //the height in decimal of the playfield
 var MAX_LENGTH_RATIO = 9;
@@ -37,7 +37,11 @@ var resizeTimer;
 
   if (!connect) { localData(); } //load up a local dataset
 
+/**
+* Load up some locally stored data. Called usually when we can not connect to the server.
+*/
 function localData() {
+
     chars = ["Ruby Rose", "Weiss Schnee", "Blake Belladonna", "Yang Xiao Long", //0123
              "Jaune Arc", "Nora Valkyrie", "Pyrrha Nikos", "Lie Ren", //4567
              "Cardin Winchester",  //8,9,10,11
@@ -47,9 +51,12 @@ function localData() {
              "Hei Xiong (Junior)", "Melanie Malachite", "Miltiades Malachite", //22,23,24
              "Adam Taurus", //25
              "Sun Wukong", "Neptune Vasilias", //26, 27
-             "Penny", "James Ironwood", "Bartholomew Oobleck", "Zwei",
-             "Raven Branwen", "Coco",
-			 "Reese Chloris"
+             "Penny Polendina", "James Ironwood", "Bartholomew Oobleck", "Zwei",
+             "Raven Branwen", "Coco Adel",
+             "Reese Chloris", "Qrow Branwen", "Winter Schnee",
+             "Peter Port",
+             "Fox Alistair", "Yatsuhashi Daichi",
+             "Scarlet David", "Sage Ayana"
              ]; //28, 29 
 
     charf = ["Ruby", "Weiss", "Blake", "Yang",
@@ -63,7 +70,10 @@ function localData() {
              "Sun", "Neptune",
              "Penny", "Ironwood" , "Oobleck", "Zwei",
              "Raven", "Coco",
-			 "Reese"
+             "Reese", "Qrow", "Winter",
+             "Port",
+             "Fox", "Yatsuhashi",
+             "Scarlet", "Sage"
              ];		                  
                   
     colors = ["#dd3144", "#2C75FF", "#302045", "#f9d366",
@@ -77,7 +87,10 @@ function localData() {
               "#dddc89", "#3cc7fe",
               "#2ff94d", "#7c807b", "#357236", "#CFCFCF",
               "#AA0000", "#987D5A",
-			  "#433B5D"
+              "#433B5D", "#3F1810", "#5A5E8B",
+              "#660000",
+              "#903509", "#FBC580",
+              "#832424", "#386D28" 
               ];
                    
     fakeElo = [1600, 1800, 1800, 1200,
@@ -91,7 +104,10 @@ function localData() {
                1600, 1500,
                2000, 1400, 1400, 1400,
                1400, 1400,
-               1600
+               1400, 1600, 1600,
+               1400,
+               1400, 1400,
+               1400, 1400
               ];
 }
     
@@ -106,12 +122,34 @@ jQuery(document).ready(function(){
     anim1.style.animationPlayState = "paused";
   }); //whenever the animation ends, pause it
   
+  var sides = { LEFT: 0, RIGHT: 1 };
+  
+  var names = 		[ ele('name1'), 	ele('name2')	];
+  var conts = 		[ ele('cont1'), 	ele('cont2')	];
+  var picconts = 	[ ele('piccont1'), 	ele('piccont2')	];
+  var bleeds = 		[ ele('bleed1'), 	ele('bleed2')	];
+  var hovers = 		[ ele('p1hvr'), 	ele('p2hvr')	];
+  var bbs = 		  [ ele('bb1'), 		ele('bb2')		];
+  
+  //reverse of the side that is input, for reverse animation
+  var reverse = [ sides.RIGHT , sides.LEFT ];
+  
+  /**
+  * Plugs in a style string to the left or the right of the element's style.
+  */
+  function plugStyle(element, side, change)
+  {
+    if (side == sides.LEFT) { element.style.left = change; }
+    else { element.style.right = change; }
+  }
+  
   var name1 = ele('name1');       var name2 = ele('name2');     
   var cont1 = ele('cont1');       var cont2 = ele('cont2');
   var piccont1 = ele('piccont1'); var piccont2 = ele('piccont2');
   var bleed1 = ele('bleed1');     var bleed2 = ele('bleed2');
   var p1hvr = ele('p1hvr');       var p2hvr = ele('p2hvr');
   var bb1 = ele('bb1');           var bb2 = ele('bb2');
+  
   var res1 = ele('res-box1');     var res2 = ele('res-box2');
   var disc1 = ele("disclaimer");  var disc2 = ele("disclaimer2");
   var undo = ele('undo');
@@ -122,7 +160,7 @@ jQuery(document).ready(function(){
   var tip = ele('tooltip');
   var startButton = ele("start");
   
-  //this doesn't run if javascript isn't there; removes the nojava page
+  //this doesn't run if javascript is disabled; removes the nojava page
   nojava.style.top = "-100%"; 
   
   var finishedList;                 //contains ids of winners in order
@@ -201,12 +239,12 @@ jQuery(document).ready(function(){
   in essence resetting their positions.
   */
   function resetAnim() {
-    piccont1.style.right=''; piccont2.style.left='';
-    cont1.style.left='';     cont2.style.right='';
-    bleed1.style.left='';    bleed2.style.right='';
-    bb1.style.left='';       bb2.style.right='';
-    name1.style.right='';    name2.style.left='';
-    or.style.top='';         intrep.style.top='';
+    piccont1.style.right=''; 		piccont2.style.left='';
+    cont1.style.left='';     		cont2.style.right='';
+    bleed1.style.left='';    		bleed2.style.right='';
+    bb1.style.left='';       		bb2.style.right='';
+    plugStyle(names[sides.LEFT], reverse[sides.LEFT], '');    	plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], ''); 
+    or.style.top='';        	 	intrep.style.top='';
   }
 
 	//do stuff when random is clicked
@@ -219,7 +257,7 @@ jQuery(document).ready(function(){
       cont1.style.left='-50%';     cont2.style.right='-50%';
       bleed1.style.left='-50%';    bleed2.style.right='-50%';
       bb1.style.left='-50%';       bb2.style.right='-50%';
-      name1.style.right='150%';    name2.style.left='150%';
+      plugStyle(names[sides.LEFT], reverse[sides.LEFT], '150%');    plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '150%'); 
       undo.style.top='150%';       intrep.style.top='-50%';
       or.style.top='150%';
 
@@ -302,20 +340,30 @@ jQuery(document).ready(function(){
     else {tip.textContent = "Return to the previous screen.";}},
     function(){tip.textContent = '';});
 	
+    /**
+    * Clear the side of the playing field opposite to the indicated side.
+    */
+    function animateClearOtherSide(side)
+    {
+          plugStyle(picconts[reverse[side]], side, '150%');
+          plugStyle(names[reverse[side]],    side, '150%'); 
+          setColors((side == sides.LEFT )  ? null : "#000000",
+                    (side == sides.RIGHT ) ? null : "#000000");
+    }
+  
     $("#p1hvr").click(function(){
       if (!click1Lock) {
+        //deny any clicks while animating
         click1Lock = true; click2Lock = true;
         if (!killswitch) {
-          piccont2.style.left='150%';
-          name2.style.left='150%';
-          setColors(colors[char1], "#000000");
-          
+		
+          animateClearOtherSide(sides.LEFT);
           wins(char1, char2);
           
           if(!eligible(char1)) { //check if the winner needs to be switched out
-            piccont1.style.right='150%';
-            name1.style.right='150%';
-            setColors("#000000", "#000000");
+            
+            animateClearOtherSide(reverse[sides.LEFT]);
+            
             if (!isItDone()) { char1 = eligibleContender(); }
             else { killswitch = true; }
           }
@@ -328,8 +376,8 @@ jQuery(document).ready(function(){
           setTimeout(function(){ setNames(char1, char2); }, SPEED);
           setTimeout(function(){
             setColors(colors[char1], colors[char2]);
-            if (!hover2Lock) { piccont1.style.right=''; name1.style.right=''; }
-            if (!hover1Lock) { piccont2.style.left=''; name2.style.left=''; }
+            if (!hover2Lock) { /*piccont1.style.right='';*/ plugStyle(picconts[sides.LEFT] , reverse[sides.LEFT], '');  plugStyle(names[sides.LEFT], reverse[sides.LEFT], ''); }
+            if (!hover1Lock) { /*piccont2.style.left='';*/  plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], ''); plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '');  }
             else if (hover1Lock) { hover1(); }
             click1Lock = false; click2Lock = false;
           }, SPEED*1.4);
@@ -340,18 +388,17 @@ jQuery(document).ready(function(){
 	
     $("#p2hvr").click(function(){
       if (!click2Lock) {
+        //deny any clicks while animating
         click2Lock = true; click1Lock = true;
         if (!killswitch) {
-          piccont1.style.right='150%';
-          name1.style.right='150%';
-          setColors("#000000", colors[char2]);
           
+          animateClearOtherSide(sides.RIGHT);
           wins(char2, char1);
           
           if(!eligible(char2)) { //check if the winner needs to be switched out
-            piccont2.style.left='150%';
-            name2.style.left='150%';
-            setColors("#000000", "#000000");
+
+            animateClearOtherSide(reverse[sides.RIGHT]);
+            
             if (!isItDone()) { char2 = eligibleContender(); }
             else {killswitch = true;}
           }
@@ -364,10 +411,11 @@ jQuery(document).ready(function(){
           setTimeout(function(){ setNames(char1, char2); }, SPEED);
           setTimeout(function(){
             setColors(colors[char1], colors[char2]);
-            if(!hover2Lock){ piccont1.style.right=''; name1.style.right=''; }
+            //TODO why is this out of order?
+            if(!hover2Lock){ /*piccont1.style.right='';*/ plugStyle(picconts[sides.LEFT] , reverse[sides.LEFT], '');  plugStyle(names[sides.LEFT], reverse[sides.LEFT], ''); }
             else if (hover2Lock) { hover2(); }
-            if(!hover1Lock){ piccont2.style.left=''; name2.style.left=''; }
-            click2Lock = false; click1Lock = false;
+            if(!hover1Lock){ /*piccont2.style.left='';*/ plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], '');  plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], ''); }
+            click1Lock = false; click2Lock = false;
           }, SPEED*1.4);
       
         }
@@ -483,19 +531,20 @@ jQuery(document).ready(function(){
     function hover1(){
       hover1Lock = true; transCont(cont2, 1);  v = '-calc(85% - 100px)';
       piccont2.style.left = '-webkit' + v; piccont2.style.left = '-moz' + v;
-      piccont2.style.left = v; name2.style.left = '80%';
+      piccont2.style.left = v; plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '80%'); 
       tip.textContent = "Choose " + charf[char1] + '.';
     }
-    function hover1end(){ hvrend(cont2, click1Lock, piccont2, name2); hover1Lock = false;
+    function hover1end(){ hvrend(cont2, click1Lock, piccont2, names[reverse[sides.LEFT]]); hover1Lock = false;
     tip.textContent = ''; }
     
     function hover2(){
       hover2Lock = true; transCont(cont1, -1); v = '-calc(85% - 100px)';
       piccont1.style.right = '-webkit' + v; piccont1.style.right = '-moz' + v;
-      piccont1.style.right = v; name1.style.right = '80%';
+      piccont1.style.right = v; plugStyle(names[sides.LEFT], reverse[sides.LEFT], '80%'); 
       tip.textContent = "Choose " + charf[char2] + '.';
     }  
-    function hover2end(){ hvrend(cont1, click2Lock, piccont1, name1); hover2Lock = false;
+	
+    function hover2end(){ hvrend(cont1, click2Lock, piccont1, names[reverse[sides.RIGHT]]); hover2Lock = false;
     tip.textContent = ''; }
     
     function transCont(dc, mul) {
@@ -585,6 +634,10 @@ jQuery(document).ready(function(){
     }
     return summ;
   }
+  
+  /**
+  * Animate the progress counter linearly from one integer to another integer.
+  */
   function intSlide(oldv, newv) {
     var max = (chars.length*(chars.length-1));
     for (t = 0; t < 50; t++) {
@@ -592,6 +645,10 @@ jQuery(document).ready(function(){
       doIntSlide(max, display, t);
     }
   }
+  
+  /**
+  * Animate the progress counter linearly from one percentage to another percentage.
+  */
   function centSlide(oldv, newv) {
     var max = (chars.length*(chars.length-1));
     for (t = 0; t < 50; t++) {
@@ -605,13 +662,28 @@ jQuery(document).ready(function(){
   function doCentSlide(display, t) {
     setTimeout(function() { intrep.textContent = display + "%"; }, SPEED/25 * t);
   } 
+  
+  /**
+  * Set the colors on the containers and bleeds on the playing field.
+  * Pass null as one of the colors to not change that color.
+  */
   function setColors(clr1, clr2) {
-    cont1.style.backgroundColor = clr1; cont2.style.backgroundColor = clr2;
-    bleed1.style.backgroundColor = clr2; bleed2.style.backgroundColor = clr1;
+    //The container is the background of a contender's side. For instance, Blake's is purple.
+    if (clr1 != null) conts[sides.LEFT] .style.backgroundColor = clr1; 
+    if (clr2 != null) conts[sides.RIGHT].style.backgroundColor = clr2;
+    //The bleed is the color behind the opponent's container. You can see the bleed
+    //of the other side if you hover over one side.
+    if (clr2 != null) bleeds[sides.LEFT] .style.backgroundColor = clr2; 
+    if (clr1 != null) bleeds[sides.RIGHT].style.backgroundColor = clr1;
 	}
+	
+  /**
+  * Sets the name fields on the left and right, given the ids pertaining
+  * to those names.
+  */
   function setNames(nm1, nm2) {
-    name1.textContent = chars[nm1];
-    name2.textContent = chars[nm2];
+    names[sides.LEFT] .textContent = chars[nm1];
+    names[sides.RIGHT].textContent = chars[nm2];
     changeAnim("piccont1","0s"); changeAnim("piccont2","0s");
 	piccont1.style.backgroundImage = ("url(char/" + charf[nm1] + ".png)");
 	piccont2.style.backgroundImage = ("url(char/" + charf[nm2] + ".png)");
@@ -674,7 +746,7 @@ jQuery(document).ready(function(){
               for (i = 0; i < elos.length; i++) {fakeElo.push(parseInt(elos[i]));} 
               reset();
             }
-            else {
+            else { //if we're graphing
               charGraph = all[0]; colorsGraph = all[2]; var elos = all[3]; var cc = all[4];
               document.getElementById("chart-label").textContent = "Polling "+cc+" submissions, the average rating for each person is:";
               eloGraph = [];
@@ -692,6 +764,7 @@ jQuery(document).ready(function(){
       }
     });
   }
+  
   function postData() {
     if (document.getElementById("consent-box").checked == true) {
       var changes = [];
