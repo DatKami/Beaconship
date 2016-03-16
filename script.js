@@ -425,7 +425,6 @@ function clickFunction(side)
       resetColorsAndSlides(); //code slides opposing side appropriately after changing opponent
       clickLock = false;
     }, SPEED*1.4);
-
   }
 }
   
@@ -437,85 +436,10 @@ function resetColorsAndSlides()
 }
   
   
-    $("#p1hvr").click(
-    function()
-    {
-      clickFunction(sides.LEFT);
-      /*
-      if (clickLock) return;
-      //deny any clicks while animating		
-      clickLock = true;
-		
-      if (!killswitch) {
-      
-        animateClearOtherSide(sides.LEFT);
-        wins(charSides[sides.LEFT], charSides[sides.RIGHT]);
-        
-        if(!eligible(charSides[sides.LEFT])) { //check if the winner needs to be switched out
-        
-        animateClearOtherSide(reverse[sides.LEFT]);
-        
-        if (!isItDone()) { charSides[sides.LEFT] = eligibleContender(); }
-        else { killswitch = true; }
-        }
-      }
-      
-      if (!killswitch) {
-      
-        charSides[sides.RIGHT] = newContender(charSides[sides.LEFT]);
-        
-        setTimeout(function(){ setNames(charSides[sides.LEFT], charSides[sides.RIGHT]); }, SPEED);
-        setTimeout(function(){
-        if (hoverLocks[sides.LEFT]) hover1(); //code slides opposing side appropriately after changing opponent
-        resetColorsAndSlides();
-        clickLock = false;
-        
-        }, SPEED*1.4);
-      
-      }
-      */
-    }
+    $("#p1hvr").click( function(){ clickFunction(sides.LEFT); }
     );
 	
-    $("#p2hvr").click(
-    function()
-    {
-      clickFunction(sides.RIGHT);
-      /*
-      if (clickLock) return;
-      //deny any clicks while animating
-      clickLock = true;
-		
-      if (!killswitch) {
-        
-        animateClearOtherSide(sides.RIGHT);
-        wins(charSides[sides.RIGHT], charSides[sides.LEFT]);
-        
-        if(!eligible(charSides[sides.RIGHT])) { //check if the winner needs to be switched out
-
-        animateClearOtherSide(reverse[sides.RIGHT]);
-        
-        if (!isItDone()) { charSides[sides.RIGHT] = eligibleContender(); }
-        else {killswitch = true;}
-        }
-      }
-		
-      if (!killswitch) {
-      
-        charSides[sides.LEFT] = newContender(charSides[sides.RIGHT]);
-        
-        setTimeout(function(){ setNames(charSides[sides.LEFT], charSides[sides.RIGHT]); }, SPEED);
-        setTimeout(function(){
-        resetColorsAndSlides();
-        if(hoverLocks[sides.RIGHT]) hover2(); //code slides opposing side appropriately after changing opponent
-        
-        clickLock = false;
-        
-        }, SPEED*1.4);
-      
-      }
-      */
-    }
+    $("#p2hvr").click( function(){ clickFunction(sides.RIGHT); }
     );
     
 	//do stuff when p1hvr is hovered
