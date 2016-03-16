@@ -394,47 +394,41 @@ jQuery(document).ready(function(){
                     (side == sides.RIGHT ) ? null : "#000000");
     }
   
-function clickFunction(side)
-{
-  if (clickLock) return;
-  //deny any clicks while animating		
-  clickLock = true;
-  
-  if (!killswitch) 
-  {
-  		animateClearOtherSide(side);
-		  wins(charSides[side], charSides[reverse[side]]);
-		  
-		  if(!eligible(charSides[side]))  //check if the winner needs to be switched out
-      { 
-        animateClearOtherSide(reverse[side]);
-        
-        if (!isItDone()) charSides[side] = eligibleContender();
-        else killswitch = true;
-		  }  
-  }
-  
-  if (!killswitch) 
-  {
-    charSides[reverse[side]] = newContender(charSides[side]);
-
-    setTimeout(function(){ setNames(charSides[sides.LEFT], charSides[sides.RIGHT]); }, SPEED);
-    setTimeout(function()
+    function clickFunction(side)
     {
-      if (hoverLocks[side]) hoverFunctions[side](); 
-      resetColorsAndSlides(); //code slides opposing side appropriately after changing opponent
-      clickLock = false;
-    }, SPEED*1.4);
-  }
-}
-  
-function resetColorsAndSlides()
-{
-  setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]);
-	if (!hoverLocks[sides.RIGHT]) { plugStyle(picconts[sides.LEFT] , reverse[sides.LEFT], '');  plugStyle(names[sides.LEFT], reverse[sides.LEFT], ''); }
-	if (!hoverLocks[sides.LEFT]) { plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], ''); plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '');  }
-}
-  
+      if (clickLock) return;
+      //deny any clicks while animating		
+      clickLock = true;
+      
+      if (!killswitch) 
+      {
+          animateClearOtherSide(side);
+          wins(charSides[side], charSides[reverse[side]]);
+          
+          if(!eligible(charSides[side]))  //check if the winner needs to be switched out
+          { 
+            animateClearOtherSide(reverse[side]);
+            
+            if (!isItDone()) charSides[side] = eligibleContender();
+            else killswitch = true;
+          }  
+      }
+      
+      if (!killswitch) 
+      {
+        charSides[reverse[side]] = newContender(charSides[side]);
+
+        setTimeout(function(){ setNames(charSides[sides.LEFT], charSides[sides.RIGHT]); }, SPEED);
+        setTimeout(function()
+        {
+          if (hoverLocks[side]) hover(side); 
+          setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]);
+          if (!hoverLocks[sides.RIGHT]) { plugStyle(picconts[sides.LEFT] , reverse[sides.LEFT], '');  plugStyle(names[sides.LEFT], reverse[sides.LEFT], ''); }
+          if (!hoverLocks[sides.LEFT]) { plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], ''); plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '');  }
+          clickLock = false;
+        }, SPEED*1.4);
+      }
+    } 
   
     $("#p1hvr").click( function(){ clickFunction(sides.LEFT); }
     );
@@ -442,10 +436,10 @@ function resetColorsAndSlides()
     $("#p2hvr").click( function(){ clickFunction(sides.RIGHT); }
     );
     
-	//do stuff when p1hvr is hovered
-    $("#p1hvr").hover(hover1, hover1end); p1hvr.addEventListener("touchend", hover1end, false);
+    //do stuff when p1hvr is hovered
+    $("#p1hvr").hover(function(){hover(sides.LEFT);}, hover1end); p1hvr.addEventListener("touchend", hover1end, false);
     //do stuff when p2hvr is hovered
-    $("#p2hvr").hover(hover2, hover2end); p2hvr.addEventListener("touchend", hover2end, false);
+    $("#p2hvr").hover(function(){hover(sides.RIGHT);}, hover2end); p2hvr.addEventListener("touchend", hover2end, false);
     
     function graph() {
       formatChart(1, charGraph.length, 'chart-names', CHART_HEIGHT*100/charGraph.length, CHART_HEIGHT);
@@ -552,35 +546,27 @@ function resetColorsAndSlides()
       }
     }
     
-    function hover1(){
-      hoverLocks[sides.LEFT] = true; transCont(cont2, 1);  v = '-calc(85% - 100px)';
-      piccont2.style.left = '-webkit' + v; 
-	  piccont2.style.left = '-moz' + v;
-      piccont2.style.left = v; plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '80%'); 
-      tip.textContent = "Choose " + charf[charSides[sides.LEFT]] + '.';
+    function hover(side)
+    {
+      hoverLocks[side] = true; transCont(conts[reverse[side]], (side == sides.LEFT ? 1 : -1));  v = '-calc(85% - 100px)';
+      plugStyle(picconts[reverse[side]], side, '-webkit' + v); 
+      plugStyle(picconts[reverse[side]], side, '-moz' + v); 
+      plugStyle(picconts[reverse[side]], side, v); 
+      plugStyle(names   [reverse[side]], side, '80%'); 
+      tip.textContent = "Choose " + charf[charSides[side]] + '.';
     }
 	
-	//click1Lock
     function hover1end(){ hvrend(cont2, clickLock, piccont2, names[reverse[sides.LEFT]]); hoverLocks[sides.LEFT] = false;
     tip.textContent = ''; }
-    
-    function hover2(){
-      hoverLocks[sides.RIGHT] = true; transCont(cont1, -1); v = '-calc(85% - 100px)';
-      piccont1.style.right = '-webkit' + v; 
-	  piccont1.style.right = '-moz' + v;
-      piccont1.style.right = v; plugStyle(names[sides.LEFT], reverse[sides.LEFT], '80%'); 
-      tip.textContent = "Choose " + charf[charSides[sides.RIGHT]] + '.';
-    }  
 	
-	//click2Lock
     function hover2end(){ hvrend(cont1, clickLock, piccont1, names[reverse[sides.RIGHT]]); hoverLocks[sides.RIGHT] = false;
     tip.textContent = ''; }
     
-    var hoverFunctions = [ function() { hover1(); },
-                           function() { hover2(); },
-                         ];
-    
-    
+    /**
+    * Translate and skew the container specified.
+    * param dc - container to transform
+    * param mul - degree of transformation
+    */
     function transCont(dc, mul) {
       a = 'skew('+mul*25+'deg,0deg) translate('+mul*20+'%, 0)';
       dc.style.webTransform=a; dc.style.msTransform=a; dc.style.transform=a;
