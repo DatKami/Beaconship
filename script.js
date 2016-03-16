@@ -56,7 +56,7 @@ function localData() {
              "Reese Chloris", "Qrow Branwen", "Winter Schnee",
              "Peter Port",
              "Fox Alistair", "Yatsuhashi Daichi",
-             "Scarlet David", "Sage Ayana"
+             "Scarlet David", "Sage Ayana",
              ]; //28, 29 
 
     charf = ["Ruby", "Weiss", "Blake", "Yang",
@@ -73,7 +73,7 @@ function localData() {
              "Reese", "Qrow", "Winter",
              "Port",
              "Fox", "Yatsuhashi",
-             "Scarlet", "Sage"
+             "Scarlet", "Sage",
              ];		                  
                   
     colors = ["#dd3144", "#2C75FF", "#302045", "#f9d366",
@@ -90,7 +90,7 @@ function localData() {
               "#433B5D", "#3F1810", "#5A5E8B",
               "#660000",
               "#903509", "#FBC580",
-              "#832424", "#386D28" 
+              "#832424", "#386D28", 
               ];
                    
     fakeElo = [1600, 1800, 1800, 1200,
@@ -107,7 +107,7 @@ function localData() {
                1400, 1600, 1600,
                1400,
                1400, 1400,
-               1400, 1400
+               1400, 1400,
               ];
 }
     
@@ -166,7 +166,11 @@ jQuery(document).ready(function(){
   var finishedList;                 //contains ids of winners in order
   var charsdata;                    //contains contender objects
   var tokenStack;                   //contains undoToken objects
-  var click1Lock; var click2Lock;   //exclusive locks to prevent animations
+  
+  //var click1Lock; var click2Lock;   //exclusive locks to prevent animations
+  
+  var clickLock;
+  
   var hover1Lock; var hover2Lock;
   var char1;      var char2;        //contenders
   var killswitch;                   //end variable
@@ -205,11 +209,11 @@ jQuery(document).ready(function(){
     var wi = $(window).width();
     var hi = $(window).height();
     if (wi <= 674 && hi > 640 || wi <= 480)  {
-      disc2.innerHTML = "(c) Kami 2014 | <a href='./privacy/'>Privacy</a> | " +
+      disc2.innerHTML = "(c) Kami 2014-2016 | <a href='./privacy/'>Privacy</a> | " +
       "<a href='./terms/'>Terms</a>";
     }
     else {
-      disc2.innerHTML = "Beaconship.me is (c) Kami, 2014. " +
+      disc2.innerHTML = "Beaconship.me is (c) Kami, 2014-2016. " +
       "<a href='http://blakebellatuna.tumblr.com/'>tumblr</a> | " +
       "beaconshipme@gmail.com | <a href='./privacy/'>Privacy</a> | " +
       "<a href='./terms/'>Terms</a>";
@@ -239,25 +243,58 @@ jQuery(document).ready(function(){
   in essence resetting their positions.
   */
   function resetAnim() {
-    piccont1.style.right=''; 		piccont2.style.left='';
-    cont1.style.left='';     		cont2.style.right='';
-    bleed1.style.left='';    		bleed2.style.right='';
-    bb1.style.left='';       		bb2.style.right='';
-    plugStyle(names[sides.LEFT], reverse[sides.LEFT], '');    	plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], ''); 
+    plugStyle(picconts[sides.LEFT], reverse[sides.LEFT], '');    	
+    plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], ''); 
+    
+    plugStyle(conts[sides.LEFT],  sides.LEFT, '');    	
+    plugStyle(conts[sides.RIGHT], sides.RIGHT, ''); 
+    
+    plugStyle(bleeds[sides.LEFT],  sides.LEFT, '');    	
+    plugStyle(bleeds[sides.RIGHT], sides.RIGHT, ''); 
+    
+    plugStyle(bbs[sides.LEFT],  sides.LEFT, '');    	
+    plugStyle(bbs[sides.RIGHT], sides.RIGHT, ''); 
+    
+    plugStyle(names[sides.LEFT], reverse[sides.LEFT], '');    	
+    plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], ''); 
+    
     or.style.top='';        	 	intrep.style.top='';
   }
 
 	//do stuff when random is clicked
 	$("#undo").click(function(){
-    click1Lock = true; click2Lock = true;
+	
+    //click1Lock = true; click2Lock = true;
+	
+	clickLock = true;
+	
     if (!killswitch) {
       char1 = eligibleContender();
       char2 = newContender(char1);
-      piccont1.style.right='150%'; piccont2.style.left='150%';
-      cont1.style.left='-50%';     cont2.style.right='-50%';
-      bleed1.style.left='-50%';    bleed2.style.right='-50%';
-      bb1.style.left='-50%';       bb2.style.right='-50%';
-      plugStyle(names[sides.LEFT], reverse[sides.LEFT], '150%');    plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '150%'); 
+	  
+      //piccont1.style.right='150%'; piccont2.style.left='150%';
+	  
+	  plugStyle(picconts[sides.LEFT],  reverse[sides.LEFT],  '150%');
+	  plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], '150%');
+	  
+      //cont1.style.left='-50%';     cont2.style.right='-50%';
+	  
+	  plugStyle(conts[sides.LEFT],  sides.LEFT,  '-50%');
+	  plugStyle(conts[sides.RIGHT], sides.RIGHT, '-50%');
+	  
+      //bleed1.style.left='-50%';    bleed2.style.right='-50%';
+      
+	  plugStyle(bleeds[sides.LEFT],  sides.LEFT,  '-50%');
+	  plugStyle(bleeds[sides.RIGHT], sides.RIGHT, '-50%');
+	  
+	  //bb1.style.left='-50%';       bb2.style.right='-50%';
+	  
+	  plugStyle(bbs[sides.LEFT],  sides.LEFT,  '-50%');
+	  plugStyle(bbs[sides.RIGHT], sides.RIGHT, '-50%');
+	  
+    plugStyle(names[sides.LEFT], 	reverse[sides.LEFT],  '150%');    
+	  plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '150%'); 
+	  
       undo.style.top='150%';       intrep.style.top='-50%';
       or.style.top='150%';
 
@@ -265,8 +302,11 @@ jQuery(document).ready(function(){
         setColors(colors[char1], colors[char2]); setNames(char1, char2);
         anim1.style.zIndex='100';
         resetAnim();
-        click1Lock = false;
-        click2Lock = false;
+		
+        //click1Lock = false; click2Lock = false;
+		
+		clickLock = false;
+		
       }, SPEED*1.2);
       setTimeout(function(){
         anim1.style.webkitAnimationPlayState = "running";
@@ -351,10 +391,19 @@ jQuery(document).ready(function(){
                     (side == sides.RIGHT ) ? null : "#000000");
     }
   
+function clickFunction(side)
+{
+}
+  
+  
     $("#p1hvr").click(function(){
-      if (!click1Lock) {
+      //if (!click1Lock) {
+	  if (!clickLock) {
         //deny any clicks while animating
-        click1Lock = true; click2Lock = true;
+        //click1Lock = true; click2Lock = true;
+		
+		clickLock = true;
+		
         if (!killswitch) {
 		
           animateClearOtherSide(sides.LEFT);
@@ -379,7 +428,11 @@ jQuery(document).ready(function(){
             if (!hover2Lock) { /*piccont1.style.right='';*/ plugStyle(picconts[sides.LEFT] , reverse[sides.LEFT], '');  plugStyle(names[sides.LEFT], reverse[sides.LEFT], ''); }
             if (!hover1Lock) { /*piccont2.style.left='';*/  plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], ''); plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '');  }
             else if (hover1Lock) { hover1(); }
-            click1Lock = false; click2Lock = false;
+            
+			//click1Lock = false; click2Lock = false;
+			
+			clickLock = false;
+			
           }, SPEED*1.4);
         
         }
@@ -387,9 +440,13 @@ jQuery(document).ready(function(){
     });
 	
     $("#p2hvr").click(function(){
-      if (!click2Lock) {
+      //if (!click2Lock) {
+	  if (!clickLock) {
         //deny any clicks while animating
-        click2Lock = true; click1Lock = true;
+        //click2Lock = true; click1Lock = true;
+		
+		clickLock = true;
+		
         if (!killswitch) {
           
           animateClearOtherSide(sides.RIGHT);
@@ -415,7 +472,10 @@ jQuery(document).ready(function(){
             if(!hover2Lock){ /*piccont1.style.right='';*/ plugStyle(picconts[sides.LEFT] , reverse[sides.LEFT], '');  plugStyle(names[sides.LEFT], reverse[sides.LEFT], ''); }
             else if (hover2Lock) { hover2(); }
             if(!hover1Lock){ /*piccont2.style.left='';*/ plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], '');  plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], ''); }
-            click1Lock = false; click2Lock = false;
+            //click1Lock = false; click2Lock = false;
+			
+			clickLock = false;
+			
           }, SPEED*1.4);
       
         }
@@ -501,7 +561,11 @@ jQuery(document).ready(function(){
           for (i = 0; i < chars.length; i++) { charsdata.push(new Contender(i, fakeElo[i])); } //initialize contenders & introduce ELOs
           for (j = 0; j < charsdata.length; j++) { expectedSum(j, charsdata); } //calculated an expected score for the session
           tokenStack = [];
-          click1Lock = false; click2Lock = false; hover1Lock = false; hover2Lock = false;
+          //click1Lock = false; click2Lock = false; 
+		  
+		  clickLock = false;
+		  
+		  hover1Lock = false; hover2Lock = false;
           
           //initialize the board
           char1 = getRandomInt(0,3); //Team RWBY
@@ -530,21 +594,26 @@ jQuery(document).ready(function(){
     
     function hover1(){
       hover1Lock = true; transCont(cont2, 1);  v = '-calc(85% - 100px)';
-      piccont2.style.left = '-webkit' + v; piccont2.style.left = '-moz' + v;
+      piccont2.style.left = '-webkit' + v; 
+	  piccont2.style.left = '-moz' + v;
       piccont2.style.left = v; plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '80%'); 
       tip.textContent = "Choose " + charf[char1] + '.';
     }
-    function hover1end(){ hvrend(cont2, click1Lock, piccont2, names[reverse[sides.LEFT]]); hover1Lock = false;
+	
+	//click1Lock
+    function hover1end(){ hvrend(cont2, clickLock, piccont2, names[reverse[sides.LEFT]]); hover1Lock = false;
     tip.textContent = ''; }
     
     function hover2(){
       hover2Lock = true; transCont(cont1, -1); v = '-calc(85% - 100px)';
-      piccont1.style.right = '-webkit' + v; piccont1.style.right = '-moz' + v;
+      piccont1.style.right = '-webkit' + v; 
+	  piccont1.style.right = '-moz' + v;
       piccont1.style.right = v; plugStyle(names[sides.LEFT], reverse[sides.LEFT], '80%'); 
       tip.textContent = "Choose " + charf[char2] + '.';
     }  
 	
-    function hover2end(){ hvrend(cont1, click2Lock, piccont1, names[reverse[sides.RIGHT]]); hover2Lock = false;
+	//click2Lock
+    function hover2end(){ hvrend(cont1, clickLock, piccont1, names[reverse[sides.RIGHT]]); hover2Lock = false;
     tip.textContent = ''; }
     
     function transCont(dc, mul) {
