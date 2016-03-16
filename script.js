@@ -172,7 +172,13 @@ jQuery(document).ready(function(){
   var clickLock;
   
   var hover1Lock; var hover2Lock;
+  
+  
   var char1;      var char2;        //contenders
+  
+  var charSides = [ char1, char2 ];
+  
+  
   var killswitch;                   //end variable
   
   reset();//initialization
@@ -269,8 +275,8 @@ jQuery(document).ready(function(){
 	clickLock = true;
 	
     if (!killswitch) {
-      char1 = eligibleContender();
-      char2 = newContender(char1);
+      charSides[sides.LEFT]  = eligibleContender();
+      charSides[sides.RIGHT] = newContender(charSides[sides.LEFT]);
 	  
       //piccont1.style.right='150%'; piccont2.style.left='150%';
 	  
@@ -299,7 +305,7 @@ jQuery(document).ready(function(){
       or.style.top='150%';
 
       setTimeout(function(){
-        setColors(colors[char1], colors[char2]); setNames(char1, char2);
+        setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]); setNames(charSides[sides.LEFT], charSides[sides.RIGHT]);
         anim1.style.zIndex='100';
         resetAnim();
 		
@@ -407,24 +413,24 @@ function clickFunction(side)
         if (!killswitch) {
 		
           animateClearOtherSide(sides.LEFT);
-          wins(char1, char2);
+          wins(charSides[sides.LEFT], charSides[sides.RIGHT]);
           
-          if(!eligible(char1)) { //check if the winner needs to be switched out
+          if(!eligible(charSides[sides.LEFT])) { //check if the winner needs to be switched out
             
             animateClearOtherSide(reverse[sides.LEFT]);
             
-            if (!isItDone()) { char1 = eligibleContender(); }
+            if (!isItDone()) { charSides[sides.LEFT] = eligibleContender(); }
             else { killswitch = true; }
           }
         }
         
         if (!killswitch) {
         
-          char2 = newContender(char1);
+          charSides[sides.RIGHT] = newContender(charSides[sides.LEFT]);
           
-          setTimeout(function(){ setNames(char1, char2); }, SPEED);
+          setTimeout(function(){ setNames(charSides[sides.LEFT], charSides[sides.RIGHT]); }, SPEED);
           setTimeout(function(){
-            setColors(colors[char1], colors[char2]);
+            setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]);
             if (!hover2Lock) { /*piccont1.style.right='';*/ plugStyle(picconts[sides.LEFT] , reverse[sides.LEFT], '');  plugStyle(names[sides.LEFT], reverse[sides.LEFT], ''); }
             if (!hover1Lock) { /*piccont2.style.left='';*/  plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], ''); plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '');  }
             else if (hover1Lock) { hover1(); }
@@ -450,24 +456,24 @@ function clickFunction(side)
         if (!killswitch) {
           
           animateClearOtherSide(sides.RIGHT);
-          wins(char2, char1);
+          wins(charSides[sides.RIGHT], charSides[sides.LEFT]);
           
-          if(!eligible(char2)) { //check if the winner needs to be switched out
+          if(!eligible(charSides[sides.RIGHT])) { //check if the winner needs to be switched out
 
             animateClearOtherSide(reverse[sides.RIGHT]);
             
-            if (!isItDone()) { char2 = eligibleContender(); }
+            if (!isItDone()) { charSides[sides.RIGHT] = eligibleContender(); }
             else {killswitch = true;}
           }
         }
         
         if (!killswitch) {
         
-          char1 = newContender(char2);
+          charSides[sides.LEFT] = newContender(charSides[sides.RIGHT]);
           
-          setTimeout(function(){ setNames(char1, char2); }, SPEED);
+          setTimeout(function(){ setNames(charSides[sides.LEFT], charSides[sides.RIGHT]); }, SPEED);
           setTimeout(function(){
-            setColors(colors[char1], colors[char2]);
+            setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]);
             //TODO why is this out of order?
             if(!hover2Lock){ /*piccont1.style.right='';*/ plugStyle(picconts[sides.LEFT] , reverse[sides.LEFT], '');  plugStyle(names[sides.LEFT], reverse[sides.LEFT], ''); }
             else if (hover2Lock) { hover2(); }
@@ -568,16 +574,16 @@ function clickFunction(side)
 		  hover1Lock = false; hover2Lock = false;
           
           //initialize the board
-          char1 = getRandomInt(0,3); //Team RWBY
-          char2 = newContender(char1); // anyone besides the first chosen
+          charSides[sides.LEFT] = getRandomInt(0,3); //Team RWBY
+          charSides[sides.RIGHT] = newContender(charSides[sides.LEFT]); // anyone besides the first chosen
         
           centSlide(0, 0); //initialize the progress counter
         
           killswitch = false;
         
           //initialize colors and names
-          setColors(colors[char1], colors[char2]);
-          setNames(char1, char2);
+          setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]);
+          setNames(charSides[sides.LEFT], charSides[sides.RIGHT]);
           
           resetAnim();
           document.getElementById("consent-box").checked = true;
@@ -597,7 +603,7 @@ function clickFunction(side)
       piccont2.style.left = '-webkit' + v; 
 	  piccont2.style.left = '-moz' + v;
       piccont2.style.left = v; plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '80%'); 
-      tip.textContent = "Choose " + charf[char1] + '.';
+      tip.textContent = "Choose " + charf[charSides[sides.LEFT]] + '.';
     }
 	
 	//click1Lock
@@ -609,7 +615,7 @@ function clickFunction(side)
       piccont1.style.right = '-webkit' + v; 
 	  piccont1.style.right = '-moz' + v;
       piccont1.style.right = v; plugStyle(names[sides.LEFT], reverse[sides.LEFT], '80%'); 
-      tip.textContent = "Choose " + charf[char2] + '.';
+      tip.textContent = "Choose " + charf[charSides[sides.RIGHT]] + '.';
     }  
 	
 	//click2Lock
