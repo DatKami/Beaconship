@@ -1,5 +1,5 @@
 /*
-Welcome! You're viewing the beaconship source code! Few things of note:
+Welcome! You're viewing the Beaconship source code! Few things of note:
 
 - This code may not be commented sufficiently or may look disorganized.
 
@@ -25,7 +25,7 @@ var inProgress = false;
 
 //static variables 
 
-var SPEED = 350;			//the speed of animation for pertaining animations
+var SPEED = 350;			//the delay of animation for pertaining animations
 var RES_BOX_HEIGHT = .65;   //the height in decimal of the results box
 var FIELD_HEIGHT = .73;     //the height in decimal of the playfield
 var MAX_LENGTH_RATIO = 9;
@@ -171,12 +171,9 @@ jQuery(document).ready(function(){
   
   var clickLock;
   
-  var hover1Lock; var hover2Lock;
+  var hoverLocks = [ false, false ];
   
-  
-  var char1;      var char2;        //contenders
-  
-  var charSides = [ char1, char2 ];
+  var charSides = [ null, null ]; //contenders
   
   
   var killswitch;                   //end variable
@@ -363,9 +360,9 @@ jQuery(document).ready(function(){
   });
   
     //do stuff when undo is hovered
-    $("#undo").hover(function(){hover1Lock = true; hover2Lock = true; 
+    $("#undo").hover(function(){hoverLocks[sides.LEFT] = true; hoverLocks[sides.RIGHT] = true; 
     tip.textContent = "Can't decide? Pick two other characters and come back to it later!";},
-    function(){ hover1Lock = false; hover2Lock = false; 
+    function(){ hoverLocks[sides.LEFT] = false; hoverLocks[sides.RIGHT] = false; 
     tip.textContent = '';});
     
     $("#percent").hover(function(){tip.textContent = "The closer this is to 100%, the closer you are to being done!";},
@@ -399,94 +396,127 @@ jQuery(document).ready(function(){
   
 function clickFunction(side)
 {
+  if (clickLock) return;
+  //deny any clicks while animating		
+  clickLock = true;
+  
+  if (!killswitch) 
+  {
+  		animateClearOtherSide(side);
+		  wins(charSides[side], charSides[reverse[side]]);
+		  
+		  if(!eligible(charSides[side]))  //check if the winner needs to be switched out
+      { 
+        animateClearOtherSide(reverse[side]);
+        
+        if (!isItDone()) charSides[side] = eligibleContender();
+        else killswitch = true;
+		  }  
+  }
+  
+  if (!killswitch) 
+  {
+    charSides[reverse[side]] = newContender(charSides[side]);
+
+    setTimeout(function(){ setNames(charSides[sides.LEFT], charSides[sides.RIGHT]); }, SPEED);
+    setTimeout(function()
+    {
+      if (hoverLocks[side]) hoverFunctions[side](); 
+      resetColorsAndSlides(); //code slides opposing side appropriately after changing opponent
+      clickLock = false;
+    }, SPEED*1.4);
+
+  }
+}
+  
+function resetColorsAndSlides()
+{
+  setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]);
+	if (!hoverLocks[sides.RIGHT]) { plugStyle(picconts[sides.LEFT] , reverse[sides.LEFT], '');  plugStyle(names[sides.LEFT], reverse[sides.LEFT], ''); }
+	if (!hoverLocks[sides.LEFT]) { plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], ''); plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '');  }
 }
   
   
-    $("#p1hvr").click(function(){
-      //if (!click1Lock) {
-	  if (!clickLock) {
-        //deny any clicks while animating
-        //click1Lock = true; click2Lock = true;
+    $("#p1hvr").click(
+    function()
+    {
+      clickFunction(sides.LEFT);
+      /*
+      if (clickLock) return;
+      //deny any clicks while animating		
+      clickLock = true;
 		
-		clickLock = true;
-		
-        if (!killswitch) {
-		
-          animateClearOtherSide(sides.LEFT);
-          wins(charSides[sides.LEFT], charSides[sides.RIGHT]);
-          
-          if(!eligible(charSides[sides.LEFT])) { //check if the winner needs to be switched out
-            
-            animateClearOtherSide(reverse[sides.LEFT]);
-            
-            if (!isItDone()) { charSides[sides.LEFT] = eligibleContender(); }
-            else { killswitch = true; }
-          }
-        }
-        
-        if (!killswitch) {
-        
-          charSides[sides.RIGHT] = newContender(charSides[sides.LEFT]);
-          
-          setTimeout(function(){ setNames(charSides[sides.LEFT], charSides[sides.RIGHT]); }, SPEED);
-          setTimeout(function(){
-            setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]);
-            if (!hover2Lock) { /*piccont1.style.right='';*/ plugStyle(picconts[sides.LEFT] , reverse[sides.LEFT], '');  plugStyle(names[sides.LEFT], reverse[sides.LEFT], ''); }
-            if (!hover1Lock) { /*piccont2.style.left='';*/  plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], ''); plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '');  }
-            else if (hover1Lock) { hover1(); }
-            
-			//click1Lock = false; click2Lock = false;
-			
-			clickLock = false;
-			
-          }, SPEED*1.4);
-        
-        }
-      }
-    });
-	
-    $("#p2hvr").click(function(){
-      //if (!click2Lock) {
-	  if (!clickLock) {
-        //deny any clicks while animating
-        //click2Lock = true; click1Lock = true;
-		
-		clickLock = true;
-		
-        if (!killswitch) {
-          
-          animateClearOtherSide(sides.RIGHT);
-          wins(charSides[sides.RIGHT], charSides[sides.LEFT]);
-          
-          if(!eligible(charSides[sides.RIGHT])) { //check if the winner needs to be switched out
-
-            animateClearOtherSide(reverse[sides.RIGHT]);
-            
-            if (!isItDone()) { charSides[sides.RIGHT] = eligibleContender(); }
-            else {killswitch = true;}
-          }
-        }
-        
-        if (!killswitch) {
-        
-          charSides[sides.LEFT] = newContender(charSides[sides.RIGHT]);
-          
-          setTimeout(function(){ setNames(charSides[sides.LEFT], charSides[sides.RIGHT]); }, SPEED);
-          setTimeout(function(){
-            setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]);
-            //TODO why is this out of order?
-            if(!hover2Lock){ /*piccont1.style.right='';*/ plugStyle(picconts[sides.LEFT] , reverse[sides.LEFT], '');  plugStyle(names[sides.LEFT], reverse[sides.LEFT], ''); }
-            else if (hover2Lock) { hover2(); }
-            if(!hover1Lock){ /*piccont2.style.left='';*/ plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], '');  plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], ''); }
-            //click1Lock = false; click2Lock = false;
-			
-			clickLock = false;
-			
-          }, SPEED*1.4);
+      if (!killswitch) {
       
+        animateClearOtherSide(sides.LEFT);
+        wins(charSides[sides.LEFT], charSides[sides.RIGHT]);
+        
+        if(!eligible(charSides[sides.LEFT])) { //check if the winner needs to be switched out
+        
+        animateClearOtherSide(reverse[sides.LEFT]);
+        
+        if (!isItDone()) { charSides[sides.LEFT] = eligibleContender(); }
+        else { killswitch = true; }
         }
       }
-    });
+      
+      if (!killswitch) {
+      
+        charSides[sides.RIGHT] = newContender(charSides[sides.LEFT]);
+        
+        setTimeout(function(){ setNames(charSides[sides.LEFT], charSides[sides.RIGHT]); }, SPEED);
+        setTimeout(function(){
+        if (hoverLocks[sides.LEFT]) hover1(); //code slides opposing side appropriately after changing opponent
+        resetColorsAndSlides();
+        clickLock = false;
+        
+        }, SPEED*1.4);
+      
+      }
+      */
+    }
+    );
+	
+    $("#p2hvr").click(
+    function()
+    {
+      clickFunction(sides.RIGHT);
+      /*
+      if (clickLock) return;
+      //deny any clicks while animating
+      clickLock = true;
+		
+      if (!killswitch) {
+        
+        animateClearOtherSide(sides.RIGHT);
+        wins(charSides[sides.RIGHT], charSides[sides.LEFT]);
+        
+        if(!eligible(charSides[sides.RIGHT])) { //check if the winner needs to be switched out
+
+        animateClearOtherSide(reverse[sides.RIGHT]);
+        
+        if (!isItDone()) { charSides[sides.RIGHT] = eligibleContender(); }
+        else {killswitch = true;}
+        }
+      }
+		
+      if (!killswitch) {
+      
+        charSides[sides.LEFT] = newContender(charSides[sides.RIGHT]);
+        
+        setTimeout(function(){ setNames(charSides[sides.LEFT], charSides[sides.RIGHT]); }, SPEED);
+        setTimeout(function(){
+        resetColorsAndSlides();
+        if(hoverLocks[sides.RIGHT]) hover2(); //code slides opposing side appropriately after changing opponent
+        
+        clickLock = false;
+        
+        }, SPEED*1.4);
+      
+      }
+      */
+    }
+    );
     
 	//do stuff when p1hvr is hovered
     $("#p1hvr").hover(hover1, hover1end); p1hvr.addEventListener("touchend", hover1end, false);
@@ -571,7 +601,7 @@ function clickFunction(side)
 		  
 		  clickLock = false;
 		  
-		  hover1Lock = false; hover2Lock = false;
+		  hoverLocks[sides.LEFT] = false; hoverLocks[sides.RIGHT] = false;
           
           //initialize the board
           charSides[sides.LEFT] = getRandomInt(0,3); //Team RWBY
@@ -599,7 +629,7 @@ function clickFunction(side)
     }
     
     function hover1(){
-      hover1Lock = true; transCont(cont2, 1);  v = '-calc(85% - 100px)';
+      hoverLocks[sides.LEFT] = true; transCont(cont2, 1);  v = '-calc(85% - 100px)';
       piccont2.style.left = '-webkit' + v; 
 	  piccont2.style.left = '-moz' + v;
       piccont2.style.left = v; plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '80%'); 
@@ -607,11 +637,11 @@ function clickFunction(side)
     }
 	
 	//click1Lock
-    function hover1end(){ hvrend(cont2, clickLock, piccont2, names[reverse[sides.LEFT]]); hover1Lock = false;
+    function hover1end(){ hvrend(cont2, clickLock, piccont2, names[reverse[sides.LEFT]]); hoverLocks[sides.LEFT] = false;
     tip.textContent = ''; }
     
     function hover2(){
-      hover2Lock = true; transCont(cont1, -1); v = '-calc(85% - 100px)';
+      hoverLocks[sides.RIGHT] = true; transCont(cont1, -1); v = '-calc(85% - 100px)';
       piccont1.style.right = '-webkit' + v; 
 	  piccont1.style.right = '-moz' + v;
       piccont1.style.right = v; plugStyle(names[sides.LEFT], reverse[sides.LEFT], '80%'); 
@@ -619,8 +649,13 @@ function clickFunction(side)
     }  
 	
 	//click2Lock
-    function hover2end(){ hvrend(cont1, clickLock, piccont1, names[reverse[sides.RIGHT]]); hover2Lock = false;
+    function hover2end(){ hvrend(cont1, clickLock, piccont1, names[reverse[sides.RIGHT]]); hoverLocks[sides.RIGHT] = false;
     tip.textContent = ''; }
+    
+    var hoverFunctions = [ function() { hover1(); },
+                           function() { hover2(); },
+                         ];
+    
     
     function transCont(dc, mul) {
       a = 'skew('+mul*25+'deg,0deg) translate('+mul*20+'%, 0)';
