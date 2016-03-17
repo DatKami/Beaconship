@@ -602,6 +602,14 @@ jQuery(document).ready(function(){
       return temp;
     }
     
+    function newerContender(winner)
+    {
+      temp = winner;
+      while(temp == winner || winner.getAbove().indexOf(temp) != -1 || winner.getBelow().indexOf(temp) != -1)) 
+      { temp = getRandomInt(0,chars.length-1) }; //Anybody besides the person just chosen
+      return temp;
+    }
+    
     function eligibleContender() {
       temp = getRandomInt(0,chars.length-1);
       while(!eligible(temp)) { temp = getRandomInt(0,chars.length-1); }
