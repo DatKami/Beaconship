@@ -184,6 +184,10 @@ jQuery(document).ready(function(){
   var tip = ele('tooltip');
   var startButton = ele("start");
   
+  var landing = document.getElementById("landing");
+  var menu = document.getElementById("menu");
+  var start = document.getElementById("start");
+  
   //this doesn't run if javascript is disabled; removes the nojava page
   nojava.style.top = "-100%"; 
   
@@ -294,7 +298,7 @@ jQuery(document).ready(function(){
       plugBoth(conts,     false, '-50%');
       plugBoth(bleeds,    false, '-50%');
       plugBoth(bbs,       false, '-50%');
-      plugBoth(names,      true,  '150%');
+      plugBoth(names,     true,  '150%');
 	  
       undo.style.top='150%';
       intrep.style.top='-50%';
@@ -342,45 +346,41 @@ jQuery(document).ready(function(){
   });
   
   $("#start").click(function(){
-    var landing = document.getElementById("landing");
-    var menu = document.getElementById("menu");
-    var start = document.getElementById("start");
     landing.style.top = '-101%'; menu.style.top = '2.5%';
     inProgress = true;
     setTimeout(function(){start.style.right = '-50%';}, SPEED);
   });
   
   $("#menu").click(function(){
-    var landing = document.getElementById("landing");
-    var menu = document.getElementById("menu");
-    var start = document.getElementById("start");
     landing.style.top = ''; menu.style.top = '';
     setTimeout(function(){reset(); start.style.right = ''; results.style.top = '';}, SPEED);
   });
+  
+    var clearTip = function(){ tip.textContent = ''; };
   
     //do stuff when undo is hovered
     $("#undo").hover(function(){hoverLocks[sides.LEFT] = true; hoverLocks[sides.RIGHT] = true; 
     tip.textContent = "Can't decide? Pick two other characters and come back to it later!";},
     function(){ hoverLocks[sides.LEFT] = false; hoverLocks[sides.RIGHT] = false; 
-    tip.textContent = '';});
+    clearTip();});
     
     $("#percent").hover(function(){tip.textContent = "The closer this is to 100%, the closer you are to being done!";},
-    function(){tip.textContent = '';});
+    clearTip);
     
     $("#menu").hover(function(){tip.textContent = "Warning! Returning to the starting page resets your progress!";},
-    function(){tip.textContent = '';});
+    clearTip);
     
     $("#start").hover(function(){tip.textContent = "Go ahead! Click it!";},
-    function(){tip.textContent = '';});
+    clearTip);
     
     $("#donut").hover(function(){tip.textContent = "Scripting takes time, websites cost money! Throw a couple dollars my way? (Redirects to Paypal, Right click to open in new tab)";},
-    function(){tip.textContent = '';});
+    clearTip);
     
     $("#results").hover(function(){
     if (!connect) {tip.textContent = "You're offline right now. We can't retrieve the ranking if that's the case!";}
     else if (!resToggle) {tip.textContent = "Display the overall results! But don't spoil the fun, make sure you've completed Beaconship at least once!";}
     else {tip.textContent = "Return to the previous screen.";}},
-    function(){tip.textContent = '';});
+    clearTip);
 	
     /**
     * Clear the side of the playing field opposite to the indicated side.
@@ -556,10 +556,10 @@ jQuery(document).ready(function(){
     }
 	
     function hover1end(){ hvrend(conts[sides.RIGHT], clickLock, picconts[sides.RIGHT], names[reverse[sides.LEFT]]); hoverLocks[sides.LEFT] = false;
-    tip.textContent = ''; }
+    clearTip(); }
 	
     function hover2end(){ hvrend(conts[sides.LEFT] , clickLock, picconts[sides.LEFT] , names[reverse[sides.RIGHT]]); hoverLocks[sides.RIGHT] = false;
-    tip.textContent = ''; }
+    clearTip(); }
     
     /**
     * Translate and skew the container specified.
@@ -574,7 +574,6 @@ jQuery(document).ready(function(){
     function hvrend(slider, clickLock, picCont, contName){
       slider.style.webkitTransform = ''; slider.style.msTransform = ''; slider.style.transform = '';
       if (!clickLock){ picCont.style.right = ''; picCont.style.left = ''; contName.style.right = ''; contName.style.left = ''; }
-      //hoverLock = false;
     }
     
     function cGet(charN, isAbove) { //get the above or below array of the id
@@ -745,12 +744,10 @@ jQuery(document).ready(function(){
   }
   
   function getData(init, grapher, show) {
-   if (init == true) { var hit = 1; } else { var hit = 0; }
-   if (grapher == true) { var gra = 1; } else { var gra = 0; }
    $.ajax({
       type: "POST",
       url:'get.php',
-      data:{ "hit": hit, "gra": gra },
+      data:{ "hit": (init ? 1 : 0), "gra": (grapher ? 1: 0) },
       complete: function (response) {
           var all = JSON.parse(response.responseText);
           if (all[0].length == 0) { 
@@ -820,21 +817,30 @@ function undoToken (winner, loser, belowExchanged, aboveExchanged) {
 }
 
 function Contender(iden, ELO) {
-  var opts = {ID: iden, above: [], below: [], e: ELO, eSum: 0, eChg: 0, status: true};
+  //var this = {ID: iden, above: [], below: [], e: ELO, eSum: 0, eChg: 0, status: true};
+  this.ID = iden;
+  this.above = [];
+  this.below = [];
+  this.e = ELO;
+  this.eSum = 0;
+  this.eChg = 0;
+  this.status = true;
   
-  this.getID = function() { return opts.ID; };
-  this.getAbove = function() { return opts.above; };
-  this.pushAbove = function(item) { if(opts.above.indexOf(item) == -1 && opts.below.indexOf(item) == -1 && item != opts.ID) { opts.above.push(item); } };
-  this.getBelow = function() { return opts.below; };
-  this.pushBelow = function(item) { if(opts.below.indexOf(item) == -1 && opts.above.indexOf(item) == -1 && item != opts.ID) { opts.below.push(item); } };
-  this.spliceAny = function() { opts.above.splice(0, 1); };
-  this.getELO = function() { return opts.e; };
-  this.setSum = function(value) { opts.eSum = value; };
-  this.getSum = function() { return opts.eSum; };
-  this.setChange = function(value) { opts.eChg = value; };
-  this.getChange = function() { return opts.eChg; };
-  this.shutdown = function() { opts.status = false; };
-  this.getStatus = function() { return opts.status; };
+  this.getID = function() { return this.ID; };
+  this.getAbove = function() { return this.above; };
+  this.pushAbove = function(item) { if( this.above.indexOf(item) == -1 && 
+                                        this.below.indexOf(item) == -1 && 
+                                        item != this.ID) { this.above.push(item); } };
+  this.getBelow = function() { return this.below; };
+  this.pushBelow = function(item) { if( this.below.indexOf(item) == -1 && 
+                                        this.above.indexOf(item) == -1 && 
+                                        item != this.ID) { this.below.push(item); } };
+  this.spliceAny = function() { this.above.splice(0, 1); };
+  this.getELO = function() { return this.e; };
+  this.setSum = function(value) { this.eSum = value; };
+  this.getSum = function() { return this.eSum; };
+  this.setChange = function(value) { this.eChg = value; };
+  this.getChange = function() { return this.eChg; };
 }
 
 //Returns number between min and max, inclusive
