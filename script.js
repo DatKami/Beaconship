@@ -143,12 +143,17 @@ jQuery(document).ready(function(){
     else { element.style.right = change; }
   }
   
-  var name1 = ele('name1');       var name2 = ele('name2');     
-  var cont1 = ele('cont1');       var cont2 = ele('cont2');
-  var piccont1 = ele('piccont1'); var piccont2 = ele('piccont2');
-  var bleed1 = ele('bleed1');     var bleed2 = ele('bleed2');
-  var p1hvr = ele('p1hvr');       var p2hvr = ele('p2hvr');
-  var bb1 = ele('bb1');           var bb2 = ele('bb2');
+  /**
+  * Symmetrically plugs styles.
+  */
+  function plugBoth(elements, reversed, change)
+  {
+    var side = sides.LEFT;
+    var styleSide = side;
+    if (reversed) styleSide = reverse[sides.LEFT];
+    plugStyle(elements        [side] ,         styleSide , change);
+    plugStyle(elements[reverse[side]], reverse[styleSide], change);
+  }
   
   var res1 = ele('res-box1');     var res2 = ele('res-box2');
   var disc1 = ele("disclaimer");  var disc2 = ele("disclaimer2");
@@ -246,22 +251,15 @@ jQuery(document).ready(function(){
   in essence resetting their positions.
   */
   function resetAnim() {
-    plugStyle(picconts[sides.LEFT], reverse[sides.LEFT], '');    	
-    plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], ''); 
     
-    plugStyle(conts[sides.LEFT],  sides.LEFT, '');    	
-    plugStyle(conts[sides.RIGHT], sides.RIGHT, ''); 
+    plugBoth(picconts,  true,   '');
+    plugBoth(conts,     false,  '');
+    plugBoth(bleeds,    false,  '');
+    plugBoth(bbs,       false,  '');
+    plugBoth(names,     true,   '');
     
-    plugStyle(bleeds[sides.LEFT],  sides.LEFT, '');    	
-    plugStyle(bleeds[sides.RIGHT], sides.RIGHT, ''); 
-    
-    plugStyle(bbs[sides.LEFT],  sides.LEFT, '');    	
-    plugStyle(bbs[sides.RIGHT], sides.RIGHT, ''); 
-    
-    plugStyle(names[sides.LEFT], reverse[sides.LEFT], '');    	
-    plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], ''); 
-    
-    or.style.top='';        	 	intrep.style.top='';
+    or.style.top='';
+    intrep.style.top='';
   }
 
 	//do stuff when random is clicked
@@ -275,38 +273,21 @@ jQuery(document).ready(function(){
       charSides[sides.LEFT]  = eligibleContender();
       charSides[sides.RIGHT] = newContender(charSides[sides.LEFT]);
 	  
-      //piccont1.style.right='150%'; piccont2.style.left='150%';
+      plugBoth(picconts,  true,  '150%');
+      plugBoth(conts,     false, '-50%');
+      plugBoth(bleeds,    false, '-50%');
+      plugBoth(bbs,       false, '-50%');
+      plugBoth(names,      true,  '150%');
 	  
-	  plugStyle(picconts[sides.LEFT],  reverse[sides.LEFT],  '150%');
-	  plugStyle(picconts[sides.RIGHT], reverse[sides.RIGHT], '150%');
-	  
-      //cont1.style.left='-50%';     cont2.style.right='-50%';
-	  
-	  plugStyle(conts[sides.LEFT],  sides.LEFT,  '-50%');
-	  plugStyle(conts[sides.RIGHT], sides.RIGHT, '-50%');
-	  
-      //bleed1.style.left='-50%';    bleed2.style.right='-50%';
-      
-	  plugStyle(bleeds[sides.LEFT],  sides.LEFT,  '-50%');
-	  plugStyle(bleeds[sides.RIGHT], sides.RIGHT, '-50%');
-	  
-	  //bb1.style.left='-50%';       bb2.style.right='-50%';
-	  
-	  plugStyle(bbs[sides.LEFT],  sides.LEFT,  '-50%');
-	  plugStyle(bbs[sides.RIGHT], sides.RIGHT, '-50%');
-	  
-    plugStyle(names[sides.LEFT], 	reverse[sides.LEFT],  '150%');    
-	  plugStyle(names[sides.RIGHT], reverse[sides.RIGHT], '150%'); 
-	  
-      undo.style.top='150%';       intrep.style.top='-50%';
-      or.style.top='150%';
+    undo.style.top='150%';
+    intrep.style.top='-50%';
+    or.style.top='150%';
 
-      setTimeout(function(){
-        setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]); setNames(charSides[sides.LEFT], charSides[sides.RIGHT]);
+    setTimeout(function(){
+        setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]); 
+        setNames(charSides[sides.LEFT], charSides[sides.RIGHT]);
         anim1.style.zIndex='100';
         resetAnim();
-		
-        //click1Lock = false; click2Lock = false;
 		
 		clickLock = false;
 		
@@ -320,8 +301,8 @@ jQuery(document).ready(function(){
       
       setTimeout(function(){ anim1.style.zIndex='-2'; undo.style.top=''; }, 
       2300 + SPEED*2.4);
-    }
-	}); 
+      }
+    }); 
     
   $("#results").click(function(){
     if (connect) {
@@ -437,9 +418,9 @@ jQuery(document).ready(function(){
     );
     
     //do stuff when p1hvr is hovered
-    $("#p1hvr").hover(function(){hover(sides.LEFT);}, hover1end); p1hvr.addEventListener("touchend", hover1end, false);
+    $("#p1hvr").hover(function(){hover(sides.LEFT);}, hover1end); hovers[sides.LEFT].addEventListener("touchend", hover1end, false);
     //do stuff when p2hvr is hovered
-    $("#p2hvr").hover(function(){hover(sides.RIGHT);}, hover2end); p2hvr.addEventListener("touchend", hover2end, false);
+    $("#p2hvr").hover(function(){hover(sides.RIGHT);}, hover2end); hovers[sides.RIGHT].addEventListener("touchend", hover2end, false);
     
     function graph() {
       formatChart(1, charGraph.length, 'chart-names', CHART_HEIGHT*100/charGraph.length, CHART_HEIGHT);
@@ -556,10 +537,10 @@ jQuery(document).ready(function(){
       tip.textContent = "Choose " + charf[charSides[side]] + '.';
     }
 	
-    function hover1end(){ hvrend(cont2, clickLock, piccont2, names[reverse[sides.LEFT]]); hoverLocks[sides.LEFT] = false;
+    function hover1end(){ hvrend(conts[sides.RIGHT], clickLock, picconts[sides.RIGHT], names[reverse[sides.LEFT]]); hoverLocks[sides.LEFT] = false;
     tip.textContent = ''; }
 	
-    function hover2end(){ hvrend(cont1, clickLock, piccont1, names[reverse[sides.RIGHT]]); hoverLocks[sides.RIGHT] = false;
+    function hover2end(){ hvrend(conts[sides.LEFT] , clickLock, picconts[sides.LEFT] , names[reverse[sides.RIGHT]]); hoverLocks[sides.RIGHT] = false;
     tip.textContent = ''; }
     
     /**
@@ -705,8 +686,8 @@ jQuery(document).ready(function(){
     names[sides.LEFT] .textContent = chars[nm1];
     names[sides.RIGHT].textContent = chars[nm2];
     changeAnim("piccont1","0s"); changeAnim("piccont2","0s");
-	piccont1.style.backgroundImage = ("url(char/" + charf[nm1] + ".png)");
-	piccont2.style.backgroundImage = ("url(char/" + charf[nm2] + ".png)");
+    picconts[sides.LEFT] .style.backgroundImage = ("url(char/" + charf[nm1] + ".png)");
+    picconts[sides.RIGHT].style.backgroundImage = ("url(char/" + charf[nm2] + ".png)");
     changeAnim("piccont1",".35s ease"); changeAnim("piccont1","35s ease");
   }
   function changeAnim(divString, dur){
