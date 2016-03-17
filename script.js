@@ -16,7 +16,8 @@ var connect = true; //debug variable for testing offline
 var chars = [];
 var charf = [];
 var colors = [];
-var fakeElo = [];   
+var fakeElo = [];
+var ids = [];
 var charGraph = [];
 var colorsGraph = [];
 var eloGraph = [];
@@ -59,6 +60,22 @@ function localData() {
              "Scarlet David", "Sage Ayana",
              ]; //28, 29 
 
+    ids =   [0, 1, 2, 3,
+             4, 5, 6, 7,
+             8,
+             9,
+             10, 11,
+             12, 13, 14, 15, 16,
+             17, 18, 19,
+             20,
+             21, 22,
+             23, 24, 25, 26,
+             27, 28,
+             29, 30, 31,
+             32, 
+             33, 34,
+             35, 36,];
+             
     charf = ["Ruby", "Weiss", "Blake", "Yang",
              "Jaune", "Nora", "Pyrrha", "Ren",
              "Cardin",
@@ -155,8 +172,10 @@ jQuery(document).ready(function(){
     plugStyle(elements[reverse[side]], reverse[styleSide], change);
   }
   
-  var res1 = ele('res-box1');     var res2 = ele('res-box2');
-  var disc1 = ele("disclaimer");  var disc2 = ele("disclaimer2");
+  var res1 = ele('res-box1');
+  var res2 = ele('res-box2');
+  var disc1 = ele("disclaimer");
+  var disc2 = ele("disclaimer2");
   var undo = ele('undo');
   var intrep = ele('percent');
   var results = ele('results-field');
@@ -262,10 +281,8 @@ jQuery(document).ready(function(){
     intrep.style.top='';
   }
 
-	//do stuff when random is clicked
+	//do stuff when undo is clicked
 	$("#undo").click(function(){
-	
-    //click1Lock = true; click2Lock = true;
 	
 	clickLock = true;
 	
@@ -279,17 +296,17 @@ jQuery(document).ready(function(){
       plugBoth(bbs,       false, '-50%');
       plugBoth(names,      true,  '150%');
 	  
-    undo.style.top='150%';
-    intrep.style.top='-50%';
-    or.style.top='150%';
+      undo.style.top='150%';
+      intrep.style.top='-50%';
+      or.style.top='150%';
 
-    setTimeout(function(){
+      setTimeout(function(){
         setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]); 
-        setNames(charSides[sides.LEFT], charSides[sides.RIGHT]);
+        setNames();
         anim1.style.zIndex='100';
         resetAnim();
 		
-		clickLock = false;
+        clickLock = false;
 		
       }, SPEED*1.2);
       setTimeout(function(){
@@ -299,10 +316,11 @@ jQuery(document).ready(function(){
         anim1.style.msAnimationPlayState = "running";
       }, SPEED*2.4);
       
-      setTimeout(function(){ anim1.style.zIndex='-2'; undo.style.top=''; }, 
-      2300 + SPEED*2.4);
-      }
-    }); 
+      setTimeout(function(){ 
+        anim1.style.zIndex='-2'; undo.style.top=''; 
+      }, 2300 + SPEED*2.4);
+    }
+  }); 
     
   $("#results").click(function(){
     if (connect) {
@@ -399,7 +417,7 @@ jQuery(document).ready(function(){
       {
         charSides[reverse[side]] = newContender(charSides[side]);
 
-        setTimeout(function(){ setNames(charSides[sides.LEFT], charSides[sides.RIGHT]); }, SPEED);
+        setTimeout(function(){ setNames(); }, SPEED);
         setTimeout(function()
         {
           if (hoverLocks[side]) hover(side); 
@@ -506,13 +524,13 @@ jQuery(document).ready(function(){
           charSides[sides.LEFT] = getRandomInt(0,3); //Team RWBY
           charSides[sides.RIGHT] = newContender(charSides[sides.LEFT]); // anyone besides the first chosen
         
-          centSlide(0, 0); //initialize the progress counter
+          intSlide(0, 0); //initialize the progress counter
         
           killswitch = false;
         
           //initialize colors and names
           setColors(colors[charSides[sides.LEFT]], colors[charSides[sides.RIGHT]]);
-          setNames(charSides[sides.LEFT], charSides[sides.RIGHT]);
+          setNames();
           
           resetAnim();
           document.getElementById("consent-box").checked = true;
@@ -578,7 +596,7 @@ jQuery(document).ready(function(){
       var oldv = totalCompares(); var ABOVE = true; var BELOW = false;
       exchange(lose, win, BELOW); //exchange all the loser's belows to winner
       exchange(win, lose, ABOVE); //exchange all the winner's aboves to loser
-      centSlide(oldv, totalCompares());
+      intSlide(oldv, totalCompares());
     }
     
     function newContender(winner) {
@@ -619,7 +637,6 @@ jQuery(document).ready(function(){
         winPic.style.backgroundImage = ("url(char/" + charf[finishedList[0]] + ".png)");
         winnerBox.style.backgroundColor = colors[finishedList[0]];
         tableItem.style.backgroundColor = colors[finishedList[g]];
-        //tableItem.textContent = (chars[finishedList[g]] + ', ' + charsdata[finishedList[g]].getChange() + ', ' + charsdata[finishedList[g]].getELO() + ', ' + charsdata[finishedList[g]].getBelow().length + '-' + charsdata[finishedList[g]].getSum()); //name, elo change, ELO, sum
         tableItem.textContent = chars[finishedList[g]];
       }
       rze(); inProgress = false;
@@ -682,7 +699,9 @@ jQuery(document).ready(function(){
   * Sets the name fields on the left and right, given the ids pertaining
   * to those names.
   */
-  function setNames(nm1, nm2) {
+  function setNames() {
+    var nm1 = charSides[sides.LEFT];
+    var nm2 = charSides[sides.RIGHT];
     names[sides.LEFT] .textContent = chars[nm1];
     names[sides.RIGHT].textContent = chars[nm2];
     changeAnim("piccont1","0s"); changeAnim("piccont2","0s");
@@ -832,7 +851,12 @@ function expectedSum(ID, cList) {
     return eSum;
 }
 
-// Returns the expected probability of contender A winning against B.
+/**
+* Returns the expected probability of contender A winning against B.
+* param rA - ELO of contender A
+* param rB - ELO of contender B
+* return - the expected value (out of 1) of contender A winning
+*/
 function expected(rA, rB) { return (1 /(1 + Math.pow(10,(rB-rA)/400))); }
 // Returns the HTML element that has the ID
 function ele(name) { return document.getElementById(name); }
