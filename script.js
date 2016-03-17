@@ -193,7 +193,6 @@ jQuery(document).ready(function(){
   
   var finishedList;                 //contains ids of winners in order
   var charsdata;                    //contains contender objects
-  var tokenStack;                   //contains undoToken objects
   
   //var click1Lock; var click2Lock;   //exclusive locks to prevent animations
   
@@ -511,10 +510,8 @@ jQuery(document).ready(function(){
       if (chars.length >= 2) {
           finishedList = [];
           charsdata = [];
-          for (i = 0; i < chars.length; i++) { charsdata.push(new Contender(i, fakeElo[i])); } //initialize contenders & introduce ELOs
-          for (j = 0; j < charsdata.length; j++) { expectedSum(j, charsdata); } //calculated an expected score for the session
-          tokenStack = [];
-          //click1Lock = false; click2Lock = false; 
+          for (i = 0; i < chars.length; i++) { charsdata.push(new Contender(ids[i], fakeElo[i], chars[i], charf[i], colors[i])); } //initialize contenders & introduce ELOs
+          for (j = 0; j < charsdata.length; j++) { expectedSum(charsdata[j].getID(), charsdata); } //calculated an expected score for the session
 		  
 		  clickLock = false;
 		  
@@ -809,21 +806,17 @@ jQuery(document).ready(function(){
 });
 function rndColor() { return '#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6)}
 
-function undoToken (winner, loser, belowExchanged, aboveExchanged) {
-  this.winner = winner;
-  this.loser = loser;
-  this.belowExchanged = belowExchanged;
-  this.aboveExchanged = aboveExchanged;
-}
-
-function Contender(iden, ELO) {
+function Contender(ID, ELO, name, shorthand, color) {
   //var this = {ID: iden, above: [], below: [], e: ELO, eSum: 0, eChg: 0, status: true};
-  this.ID = iden;
+  this.ID = ID;
+  this.name = name;
+  this.shorthand = shorthand;
+  this.color = color;
   this.above = [];
   this.below = [];
-  this.e = ELO;
-  this.eSum = 0;
-  this.eChg = 0;
+  this.ELO = ELO;
+  this.ELOSum = 0;
+  this.ELOChg = 0;
   this.status = true;
   
   this.getID = function() { return this.ID; };
@@ -835,12 +828,11 @@ function Contender(iden, ELO) {
   this.pushBelow = function(item) { if( this.below.indexOf(item) == -1 && 
                                         this.above.indexOf(item) == -1 && 
                                         item != this.ID) { this.below.push(item); } };
-  this.spliceAny = function() { this.above.splice(0, 1); };
-  this.getELO = function() { return this.e; };
-  this.setSum = function(value) { this.eSum = value; };
-  this.getSum = function() { return this.eSum; };
-  this.setChange = function(value) { this.eChg = value; };
-  this.getChange = function() { return this.eChg; };
+  this.getELO = function() { return this.ELO; };
+  this.setSum = function(value) { this.ELOSum = value; };
+  this.getSum = function() { return this.ELOSum; };
+  this.setChange = function(value) { this.ELOChg = value; };
+  this.getChange = function() { return this.ELOChg; };
 }
 
 //Returns number between min and max, inclusive
