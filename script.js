@@ -188,6 +188,7 @@ jQuery(document).ready(function(){
   var results = ele('results-field');
   var nojava = ele('nojava-field');
   var selection = ele('selection-field');
+  var selDiv = ele('selection-div');
   var resultsLabel = ele('results-label');
   var tip = ele('tooltip');
   var startButton = ele("start");
@@ -651,6 +652,8 @@ jQuery(document).ready(function(){
           setColors(charSides[sides.LEFT].color, charSides[sides.RIGHT].color); 
           setNames();
           
+          populateSelections();
+          
           resetAnim(); 
           document.getElementById("consent-box").checked = true;
           rze();
@@ -678,7 +681,7 @@ jQuery(document).ready(function(){
       charsdata = [];
       bench = [];
       for (i = 0; i < chars.length; i++) { charsdata.push(new Contender(ids[i], fakeElo[i], chars[i], charf[i], colors[i])); } //initialize contenders & introduce ELOs
-      for (var i = 13; i < 37; ++i)
+      for (var i = 37; i < 37; ++i)
       {
         var contender = getContender(i);
         var contenderIndex = charsdata.indexOf(contender);
@@ -691,7 +694,44 @@ jQuery(document).ready(function(){
       console.log(bench);
     }
 
+    function removeSpaces(string)
+    {
+      var out = "";
+      for(var i = 0; i < string.length; ++i)
+      {
+        if (string[i] != ' ') out += string[i];
+      }
+    }
+    
+    function populateSelections()
+    {
+      var teams = presetTeams();
+      
+      while ( selDiv.firstChild ) selDiv.removeChild( selDiv.firstChild ); //purge contents
+      for (var i = 0; i < teams.length; ++i)
+      {
+        var team = teams[i];
+        var tempDiv = document.createElement(removeSpaces(team.name));
+        tempDiv.className = "team-container anim";
+        tempDiv.textContent = team.name;
+        var tempDiv2 = document.createElement(removeSpaces(team.name)+"contents");
+        tempDiv2.className = "team-container2";
+        for (var j = 0; j < team.IDs.length; ++j)
+        {
+          var contender = getContender(team.IDs[j]);
+          var charDiv = document.createElement('span');
+          charDiv.id = contender.shorthand + "Select";
+          charDiv.textContent = contender.shorthand;
+          charDiv.style.background = "url(char/"+contender.shorthand+".png)no-repeat 0% center fixed";
+          charDiv.style.backgroundColor = contender.color;
+          tempDiv2.appendChild(charDiv);
+        }
+        tempDiv.appendChild(tempDiv2);
+        selDiv.appendChild(tempDiv);
+      }
 
+    }
+    
     /**
     * Returns if the sorting is completed, as well as wraps up the game if it is finished.
     */
@@ -782,39 +822,6 @@ jQuery(document).ready(function(){
   */
   function expected(rA, rB) { return (1 /(1 + Math.pow(10,(rB-rA)/400))); }
   // Returns the HTML element that has the ID
-
-  /////////////
-  // CLASSES //
-  /////////////
-
-  function Contender(ID, ELO, name, shorthand, color) {
-    //var this = {ID: iden, above: [], below: [], e: ELO, eSum: 0, eChg: 0, status: true};
-    this.ID = ID;
-    this.name = name;
-    this.shorthand = shorthand;
-    this.color = color;
-    this.above = [];
-    this.below = [];
-    this.ELO = ELO;
-    this.ELOSum = 0;
-    this.ELOChg = 0;
-    this.status = true;
-    
-    this.getID = function() { return this.ID; };
-    this.getAbove = function() { return this.above; };
-    this.pushAbove = function(item) { if( this.above.indexOf(item) == -1 && 
-                                          this.below.indexOf(item) == -1 && 
-                                          item != this.ID) { this.above.push(item); } };
-    this.getBelow = function() { return this.below; };
-    this.pushBelow = function(item) { if( this.below.indexOf(item) == -1 && 
-                                          this.above.indexOf(item) == -1 && 
-                                          item != this.ID) { this.below.push(item); } };
-    this.getELO = function() { return this.ELO; };
-    this.setSum = function(value) { this.ELOSum = value; };
-    this.getSum = function() { return this.ELOSum; };
-    this.setChange = function(value) { this.ELOChg = value; };
-    this.getChange = function() { return this.ELOChg; };
-  }
 
   /////////////////////////
   // CONTENDER RETRIEVAL //
@@ -951,12 +958,13 @@ jQuery(document).ready(function(){
       }
       
       function formatChart(start, end, divString, size, absHeight) {
-      var divTo = document.getElementById(divString);
-      while ( divTo.firstChild ) divTo.removeChild( divTo.firstChild ); //purge contents
-      for (i = start; i <= end; i++) {
-        var tempDiv = document.createElement('div'); tempDiv.id = 'nn'+i;
-        tempDiv.className = "chartlabel anim";
-        styler(start, end, tempDiv, size+'vh', absHeight); divTo.appendChild(tempDiv);
+        var divTo = document.getElementById(divString);
+        while ( divTo.firstChild ) divTo.removeChild( divTo.firstChild ); //purge contents
+        for (i = start; i <= end; i++) {
+          var tempDiv = document.createElement('div'); tempDiv.id = 'nn'+i;
+          tempDiv.className = "chartlabel anim";
+          styler(start, end, tempDiv, size+'vh', absHeight); 
+          divTo.appendChild(tempDiv);
         }
       }
       
